@@ -1,0 +1,16 @@
+﻿@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+@if (User.Identity.IsAuthenticated)
+{
+    <dl class="row">
+        @foreach (var claim in User.Claims)
+        {
+            <dt class="col-7 font-weight-normal">@claim.Type</dt>
+            <dd class="col-5">@claim.Value</dd>
+        }
+    </dl>
+}
