@@ -1,15 +1,14 @@
-﻿using Identity.Library.Entities;
+﻿using System;
+using System.Text;
+using System.Text.Encodings.Web;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.WebUtilities;
-using System;
-using System.Text;
-using System.Text.Encodings.Web;
-using System.Threading.Tasks;
 
-namespace Identity.Web.Areas.Identity.Helpers
+namespace Identity.Library.Helpers
 {
     public class AccountMailHelper<TUser>
         where TUser : IdentityUser, new()
@@ -39,6 +38,11 @@ namespace Identity.Web.Areas.Identity.Helpers
         }
         public async Task SendVerificationEmail(TUser user)
         {
+            if (user == null)
+            {
+                throw new ArgumentNullException(nameof(user));
+            }
+
             var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
             code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
             var context = _httpContextAccessor.HttpContext;

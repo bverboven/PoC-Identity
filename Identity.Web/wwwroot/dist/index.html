@@ -1,0 +1,78 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Javascript client</title>
+    <link rel="stylesheet" href="/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="/css/site.css" />
+</head>
+<body>
+    <h1>Identity Javascript client</h1>
+    <form id="loginForm" class="form-inline mb-2">
+        <input type="email" name="email" autocomplete="username" placeholder="Email" class="form-control" />
+        <input type="password" name="password" autocomplete="current-password" placeholder="password" class="form-control" />
+        <button type="submit" id="loginButton" class="btn btn-primary">Login</button>
+    </form>
+
+    <button type="button" id="claimsFromCookieButton" class="btn btn-secondary">Show claims using cookie</button>
+    <button type="button" id="claimsFromTokenButton" class="btn btn-secondary">Show claims using token</button>
+
+    <div id="output" style="white-space: pre;"></div>
+
+    <script>
+        async function getDataFromCookieAuthentication() {
+            const response = await fetch('/api');
+            console.debug("GetData", { response });
+            const json = await response.json();
+            document.getElementById("output").innerText = JSON.stringify(json, null, 2);
+        }
+
+        async function login(username, password) {
+            const response = await fetch('/api/login',
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+            if (response.status !== 200) {
+                return null;
+            }
+
+            const result = await response.json();
+            return result.token;
+        }
+        async function getClaims(token) {
+            const response = await fetch('/api/claims',
+                {
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                });
+            const json = await response.json();
+            document.getElementById("output").innerText = JSON.stringify(json, null, 2);
+        }
+
+        window.onload = function () {
+            let token = null;
+            const form = document.getElementById('loginForm');
+            const loginButton = document.getElementById('loginButton');
+            const claimsFromCookieButton = document.getElementById('claimsFromCookieButton');
+            const claimsFromTokenButton = document.getElementById('claimsFromTokenButton');
+
+            claimsFromCookieButton.addEventListener("click", getDataFromCookieAuthentication);
+            claimsFromTokenButton.style.display = 'none';
+            loginButton.addEventListener("click", async e => {
+                e.preventDefault();
+                token = await login(form.email.value, form.password.value);
+                if (token) {
+                    claimsFromTokenButton.style.display = 'inline-block';
+                    loginForm.style.display = 'none';
+                }
+            });
+            claimsFromTokenButton.addEventListener("click", e => getClaims(token));
+        };
+    </script>
+</body>
+</html>

@@ -1,7 +1,7 @@
 ﻿using Identity.Library.Data;
 using Identity.Library.Entities;
+using Identity.Library.Helpers;
 using Identity.Library.Services;
-using Identity.Web.Areas.Identity.Helpers;
 using Identity.Web.Mail;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
@@ -55,7 +55,6 @@ namespace Identity.Web.Areas.Identity
                     .AddDefaultUI()
                     .AddEntityFrameworkStores<IdentityContext>()
                     .AddDefaultTokenProviders()
-                    .AddUserManager<ApplicationUserManager>()
                     .AddClaimsPrincipalFactory<ApplicationUserClaimsFactory>();
 
                 services
@@ -64,22 +63,27 @@ namespace Identity.Web.Areas.Identity
 
                 // external logins
                 services
+                    // get AuthenticationBuilder
                     .AddAuthentication()
+                    // Google
                     .AddGoogle(o =>
                     {
                         o.ClientId = identityConfig["Google:ClientId"];
                         o.ClientSecret = identityConfig["Google:ClientSecret"];
                     })
+                    // Microsoft
                     .AddMicrosoftAccount(o =>
                     {
                         o.ClientId = identityConfig["Microsoft:ClientId"];
                         o.ClientSecret = identityConfig["Microsoft:ClientSecret"];
                     })
+                    // Facebook
                     .AddFacebook(o =>
                     {
                         o.AppId = identityConfig["Facebook:ClientId"];
                         o.AppSecret = identityConfig["Facebook:ClientSecret"];
                     })
+                    // Twitter (doesn't seem to work with localhost)
                     .AddTwitter(o =>
                     {
                         o.ConsumerKey = identityConfig["Google:ClientId"];

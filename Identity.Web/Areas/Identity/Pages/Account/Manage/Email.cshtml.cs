@@ -1,10 +1,10 @@
 ﻿using Identity.Library.Entities;
-using Identity.Web.Areas.Identity.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
+using Identity.Library.Helpers;
 
 namespace Identity.Web.Areas.Identity.Pages.Account.Manage
 {

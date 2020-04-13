@@ -7,15 +7,8 @@ using System.Threading.Tasks;
 
 namespace Identity.Web.Mail
 {
-    public class MailOptions
-    {
-        public string Key { get; set; }
-        public string Sender { get; set; }
-    }
     public class IdentityEmailSender : IEmailSender
     {
-
-
         private readonly SendGridClient _client;
         private readonly string _sender;
         public IdentityEmailSender(MailOptions options)

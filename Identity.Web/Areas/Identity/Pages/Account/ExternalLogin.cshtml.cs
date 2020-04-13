@@ -1,5 +1,4 @@
 ﻿using Identity.Library.Entities;
-using Identity.Web.Areas.Identity.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -8,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Identity.Library.Helpers;
 
 namespace Identity.Web.Areas.Identity.Pages.Account
 {

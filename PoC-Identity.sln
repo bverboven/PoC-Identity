@@ -13,6 +13,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{8EB0C54E-2
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution items", "Solution items", "{2A269114-6866-4019-BF14-36A3B2878532}"
 	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
 		..\..\..\Users\Bram\AppData\Roaming\Microsoft\UserSecrets\44ccc6fe-9f8d-45d8-aabb-a6945f634f74\secrets.json = ..\..\..\Users\Bram\AppData\Roaming\Microsoft\UserSecrets\44ccc6fe-9f8d-45d8-aabb-a6945f634f74\secrets.json
 	EndProjectSection
 EndProject
