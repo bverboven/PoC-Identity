@@ -6,10 +6,14 @@ namespace Identity.Library.Data
 {
     public class IdentityContext : IdentityDbContext<ApplicationUser>
     {
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
+
+
         public IdentityContext(DbContextOptions<IdentityContext> options)
             : base(options)
         {
         }
+
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

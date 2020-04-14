@@ -1,17 +1,14 @@
-using System.Collections.Generic;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
+using Microsoft.IdentityModel.Tokens;
+using System;
 using System.IO;
 using System.Text;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.IdentityModel.Tokens;
 
 namespace Identity.Web
 {
@@ -27,7 +24,10 @@ namespace Identity.Web
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllersWithViews();
+            services
+                .AddControllersWithViews()
+                // use NewtonSoft Json for better serializing results
+                .AddNewtonsoftJson();
             services.AddRazorPages();
 
             services.AddHttpContextAccessor();
@@ -44,18 +44,12 @@ namespace Identity.Web
                     });
             });
 
+            // authentication
             services
-                .AddAuthentication("Cookies")
-                .AddCookie("Cookies", o =>
-                {
-                    o.Events.OnSigningIn = s =>
-                    {
-                        // extra checks
-                        return Task.CompletedTask;
-                    };
-                })
+                .AddAuthentication()
+                .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme)
                 // more info: https://docs.microsoft.com/en-us/aspnet/core/security/authorization/limitingidentitybyscheme?view=aspnetcore-3.1
-                .AddJwtBearer("Bearer", o =>
+                .AddJwtBearer(o =>
                 {
                     o.RequireHttpsMetadata = false;
                     o.SaveToken = true;
@@ -64,16 +58,34 @@ namespace Identity.Web
                         ValidateIssuerSigningKey = true,
                         IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes("secret".PadRight(16, 'x'))),
                         ValidateIssuer = false,
-                        ValidateAudience = false
+                        ValidateAudience = false,
+                        // enable expiration check
+                        ValidateLifetime = true,
+                        // set on zero for testing (otherwise minimum expiration is around 5 min)
+                        ClockSkew = TimeSpan.Zero
                     };
                 });
 
+            // authorization
             services
                 .AddAuthorization(o =>
                 {
-                    o.AddPolicy("IsLoggedIn", c =>
+                    o.AddPolicy("IsAdmin", c =>
                     {
                         c.RequireAuthenticatedUser();
+                        c.RequireRole("Administrator");
+                    });
+                    o.AddPolicy("CanRead", c =>
+                    {
+                        c.RequireClaim("permission", "can_read");
+                    });
+                    o.AddPolicy("CanCreate", c =>
+                    {
+                        c.RequireClaim("permission", "can_create");
+                    });
+                    o.AddPolicy("HasName", c =>
+                    {
+                        c.RequireClaim("name");
                     });
                 });
         }
@@ -103,7 +115,8 @@ namespace Identity.Web
             // static files
             app.UseStaticFiles(new StaticFileOptions
             {
-                FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot")),
+                FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "dist")),
+                //RequestPath = "/dist",
                 DefaultContentType = "text/html"
             });
 
@@ -116,10 +129,7 @@ namespace Identity.Web
             app.UseEndpoints(endpoints =>
             {
                 endpoints
-                    .MapControllerRoute(name: "default", pattern: "{controller=Home}/{action=Index}/{id?}")
-                    .RequireAuthorization();
-                endpoints
-                    .MapControllers()
+                    .MapDefaultControllerRoute()
                     .RequireAuthorization();
                 endpoints.MapRazorPages();
             });

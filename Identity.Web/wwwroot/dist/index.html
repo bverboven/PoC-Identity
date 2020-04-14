@@ -14,21 +14,35 @@
         <button type="submit" id="loginButton" class="btn btn-primary">Login</button>
     </form>
 
-    <button type="button" id="claimsFromCookieButton" class="btn btn-secondary">Show claims using cookie</button>
-    <button type="button" id="claimsFromTokenButton" class="btn btn-secondary">Show claims using token</button>
+    <p>
+        <button type="button" id="claimsFromCookieButton" class="btn btn-info">Show claims using cookie</button>
+        <button type="button" id="claimsFromTokenButton" class="btn btn-info">Show claims using token</button>
+        <button type="button" id="refreshTokenButton" class="btn btn-primary">Refresh token</button>
+    </p>
+    <p>
+        <button type="button" id="checkAdminButton" class="btn btn-secondary">Is Administrator?</button>
+        <button type="button" id="checkReadButton" class="btn btn-secondary">Can read?</button>
+        <button type="button" id="checkCreateButton" class="btn btn-secondary">Can create?</button>
+    </p>
 
     <div id="output" style="white-space: pre;"></div>
 
     <script>
+        const tokenMap = new Map();
+        // using cookie authentication
         async function getDataFromCookieAuthentication() {
-            const response = await fetch('/api');
-            console.debug("GetData", { response });
+            const response = await fetch('/account/userdata');
+            const output = document.getElementById('output');
+            if (response.status !== 200) {
+                output.innerText = 'Error: ' + response.status;
+                console.error('Failed to fetch data using cookie', { response });
+            }
             const json = await response.json();
-            document.getElementById("output").innerText = JSON.stringify(json, null, 2);
+            output.innerText = JSON.stringify(json, null, 2);
         }
-
+        // using jwt bearer token
         async function login(username, password) {
-            const response = await fetch('/api/login',
+            const response = await fetch('/api/auth/login',
                 {
                     method: 'POST',
                     headers: {
@@ -36,42 +50,117 @@
                     },
                     body: JSON.stringify({ username, password })
                 });
+            const output = document.getElementById('output');
             if (response.status !== 200) {
+                output.innerText = 'Login failed: ' + response.status;
+                console.error('Failed to login', { response });
                 return null;
             }
 
             const result = await response.json();
-            return result.token;
+            updateTokenMap(result);
         }
-        async function getClaims(token) {
-            const response = await fetch('/api/claims',
+        async function refresh() {
+            const accessToken = tokenMap.get('accessToken');
+            const refreshToken = tokenMap.get('refreshToken');
+            console.debug('refreshing token', { tokenMap });
+            const response = await fetch('/api/auth/refresh',
+                {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + accessToken,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ accessToken, refreshToken })
+                });
+            const output = document.getElementById('output');
+            if (response.status !== 200) {
+                output.innerText = 'Refresh failed: ' + response.status;
+                console.error('Failed to refresh', { response });
+                return null;
+            }
+            output.innerText = 'Token refreshed';
+
+            const result = await response.json();
+            updateTokenMap(result);
+            setTimeout(refresh, tokenMap.get('expiresIn') - (10 * 1000));
+        }
+
+        async function getClaims() {
+            const token = tokenMap.get('accessToken');
+            console.debug('Getting claims', { token });
+            const response = await fetch('/api/auth/claims',
                 {
                     headers: {
                         'Authorization': 'Bearer ' + token
                     }
                 });
+            const output = document.getElementById('output');
+            if (response.status !== 200) {
+                output.innerText = 'Error: ' + response.status + ' (token might be expired)';
+                console.error('Failed to fetch claims', { response });
+                return;
+            }
             const json = await response.json();
-            document.getElementById("output").innerText = JSON.stringify(json, null, 2);
+            output.innerText = JSON.stringify(json, null, 2);
+        }
+        async function checkAuthorization(action) {
+            const token = tokenMap.get('accessToken');
+            const response = await fetch('/api/auth/' + action,
+                {
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                });
+            const output = document.getElementById('output');
+            if ([401, 403].includes(response.status)) {
+                output.innerText = 'Not allowed';
+                return;
+            }
+            output.innerText = 'Authorization approved';
+        }
+
+        function updateTokenMap(result) {
+            tokenMap.set('accessToken', result.accessToken.token);
+            tokenMap.set('expiresIn', new Date(result.accessToken.expires) - new Date());
+            tokenMap.set('refreshToken', result.refreshToken.token);
         }
 
         window.onload = function () {
-            let token = null;
-            const form = document.getElementById('loginForm');
+            const loginForm = document.getElementById('loginForm');
             const loginButton = document.getElementById('loginButton');
             const claimsFromCookieButton = document.getElementById('claimsFromCookieButton');
             const claimsFromTokenButton = document.getElementById('claimsFromTokenButton');
+            const checkAdminButton = document.getElementById('checkAdminButton');
+            const checkReadButton = document.getElementById('checkReadButton');
+            const checkCreateButton = document.getElementById('checkCreateButton');
+            const refreshTokenButton = document.getElementById('refreshTokenButton');
 
-            claimsFromCookieButton.addEventListener("click", getDataFromCookieAuthentication);
+            claimsFromCookieButton.addEventListener('click', getDataFromCookieAuthentication);
             claimsFromTokenButton.style.display = 'none';
-            loginButton.addEventListener("click", async e => {
-                e.preventDefault();
-                token = await login(form.email.value, form.password.value);
-                if (token) {
+            checkAdminButton.style.display = 'none';
+            checkCreateButton.style.display = 'none';
+            refreshTokenButton.style.display = 'none';
+
+            loginButton.addEventListener('click', async () => {
+                await login(loginForm.email.value, loginForm.password.value);
+                if (tokenMap.get('accessToken')) {
+                    console.debug('Logged in', { tokenMap });
                     claimsFromTokenButton.style.display = 'inline-block';
+                    checkAdminButton.style.display = 'inline-block';
+                    checkCreateButton.style.display = 'inline-block';
+                    refreshTokenButton.style.display = 'inline-block';
                     loginForm.style.display = 'none';
+                    setTimeout(refresh, tokenMap.get('expiresIn') - (10 * 1000));
                 }
             });
-            claimsFromTokenButton.addEventListener("click", e => getClaims(token));
+            claimsFromTokenButton.addEventListener('click', getClaims);
+            checkAdminButton.addEventListener('click', () => checkAuthorization('is-admin'));
+            checkReadButton.addEventListener('click', () => checkAuthorization('can-read'));
+            checkCreateButton.addEventListener('click', () => checkAuthorization('can-create'));
+            refreshTokenButton.addEventListener('click', refresh);
+
+            loginForm.addEventListener('submit', e => e.preventDefault());
         };
     </script>
 </body>

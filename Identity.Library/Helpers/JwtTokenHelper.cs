@@ -24,7 +24,8 @@ namespace Identity.Library.Helpers
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(claims),
-                Expires = expires ?? DateTime.UtcNow.AddDays(7),
+                // only 1 minute (for testing expiration)
+                Expires = expires ?? DateTime.UtcNow.AddHours(2),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(secretKey), _algorithm)
             };
 

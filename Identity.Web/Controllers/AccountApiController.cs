@@ -1,25 +1,30 @@
-﻿using System.Linq;
-using System.Security.Claims;
-using System.Threading.Tasks;
+﻿using System;
 using Identity.Library.Entities;
 using Identity.Library.Helpers;
 using Identity.Web.Models;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.Linq;
+using System.Security.Claims;
+using System.Threading.Tasks;
+using Identity.Library.Services;
 
 namespace Identity.Web.Controllers
 {
+    // use Bearer scheme as default for api
+    [Authorize(AuthenticationSchemes = "Bearer")]
     [ApiController]
-    [Route("api")]
+    [Route("api/auth")]
     public class AccountApiController : ControllerBase
     {
-        static readonly string[] WANTED_CLAIMS = { ClaimTypes.NameIdentifier, ClaimTypes.Name, "fullname" };
+        static readonly string[] WANTED_CLAIMS = { ClaimTypes.NameIdentifier, ClaimTypes.Name, ClaimTypes.Role, "fullname", "permission" };
 
-        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly ApplicationUserManager _userManager;
         private readonly IUserClaimsPrincipalFactory<ApplicationUser> _claimsFactory;
         private readonly JwtTokenHelper _tokenHelper;
-        public AccountApiController(UserManager<ApplicationUser> userManager, IUserClaimsPrincipalFactory<ApplicationUser> claimsFactory)
+        public AccountApiController(ApplicationUserManager userManager, IUserClaimsPrincipalFactory<ApplicationUser> claimsFactory)
         {
             _userManager = userManager;
             _claimsFactory = claimsFactory;
@@ -28,56 +33,114 @@ namespace Identity.Web.Controllers
 
 
         [AllowAnonymous]
-        [HttpGet]
-        public IActionResult GetDataFromCookie()
-        {
-            var cookieValues = Request.Cookies.Select(c => new { c.Key, c.Value });
-            var headerValues = Request.Headers.Select(h => new { h.Key, h.Value });
-            var userName = User.Identity.Name;
-            var claims = User.Claims.Select(c => new { c.Type, c.Value });
-            var tokenClaims = User.Claims.Where(c => WANTED_CLAIMS.Contains(c.Type));
-            var token = _tokenHelper.Create(tokenClaims);
-
-            return Ok(new
-            {
-                User.Identity.IsAuthenticated,
-                userName,
-                claims,
-                cookieValues,
-                headerValues,
-                token
-            });
-        }
-
-        [AllowAnonymous]
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody]ApiLoginModel model)
         {
             var user = await _userManager.FindByNameAsync(model.Username);
             if (user != null && await _userManager.CheckPasswordAsync(user, model.Password))
             {
-                var principal = await _claimsFactory.CreateAsync(user);
-                var claims = (await _userManager.GetClaimsAsync(user))
-                    .Concat(principal.Claims)
-                    .Where(c => WANTED_CLAIMS.Contains(c.Type))
-                    .ToList();
-                var token = _tokenHelper.Create(claims);
-                return Ok(new { token });
+                var tokenResult = await CreateToken(user);
+                return Ok(tokenResult);
             }
 
             return Unauthorized();
         }
-
-        [Authorize(AuthenticationSchemes = "Bearer")]
-        [HttpGet("claims")]
-        public IActionResult GetClaims()
+        [AllowAnonymous]
+        [HttpPost("refresh")]
+        public async Task<IActionResult> Refresh([FromBody] ApiRefreshModel model)
         {
-            var claims = User.Claims.Select(c => new { c.Type, c.Value });
+            var userId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user != null && await _userManager.VerifyRefreshToken(user, model.RefreshToken))
+            {
+                var tokenResult = await CreateToken(user);
+                return Ok(tokenResult);
+            }
+
+            return Unauthorized();
+        }
+        private async Task<object> CreateToken(ApplicationUser user)
+        {
+            var principal = await _claimsFactory.CreateAsync(user);
+            var claims = (await _userManager.GetClaimsAsync(user))
+                .Concat(principal.Claims)
+                .Where(c => WANTED_CLAIMS.Contains(c.Type))
+                .ToList();
+
+            var expires = DateTime.Now.AddMinutes(1);
+            var token = _tokenHelper.Create(claims, expires);
+            //var tokenModel = new TokenModel(token);
+
+            var refreshToken = await _userManager.CreateRefreshToken(user);
+
+            // update saved token in HttpContext
+            //var authenticationInfo = await HttpContext.AuthenticateAsync("Bearer");
+            //if (authenticationInfo.Properties != null)
+            //{
+            //    authenticationInfo.Properties.UpdateTokenValue("access_token", token);
+            //    authenticationInfo.Properties.UpdateTokenValue("expires_at", expires.ToString("o"));
+            //}
+
+            return new
+            {
+                //token = tokenModel,
+                accessToken = new
+                {
+                    token,
+                    expires
+                },
+                refreshToken = new
+                {
+                    refreshToken.Token,
+                    refreshToken.Expires
+                }
+            };
+        }
+
+        // requires authorized token from scheme "Bearer"
+        [HttpGet("claims")]
+        public async Task<IActionResult> GetClaims()
+        {
+            var token = await HttpContext.GetTokenAsync("Bearer", "access_token");
+            var tokenModel = new TokenModel(token);
+            var userName = User.Identity.Name;
+            var claims = User.Claims
+                .Select(c => new { c.Type, c.Value })
+                .ToList();
+            var cookieValues = Request.Cookies.Select(c => new { c.Key, c.Value });
+            var headerValues = Request.Headers.Select(h => new { h.Key, h.Value });
+
             return Ok(new
             {
                 User.Identity.IsAuthenticated,
-                claims
+                userName,
+                claims,
+                token = tokenModel,
+                cookieValues,
+                headerValues
             });
+        }
+
+        // requires authorized bearer token and policy "IsAdmin"
+        [Authorize("IsAdmin")]
+        [HttpGet("is-admin")]
+        public IActionResult CheckAdmin()
+        {
+            return Ok(new { isAdmin = true });
+        }
+        // requires authorized bearer token and policy "CanRead"
+        [Authorize("CanRead")]
+        [HttpGet("can-read")]
+        public IActionResult CanRead()
+        {
+            return Ok(new { canRead = true });
+        }
+        // requires authorized bearer token and policy "CanCreate"
+        [Authorize("CanCreate")]
+        [HttpGet("can-create")]
+        public IActionResult CanCreate()
+        {
+            return Ok(new { canCreate = true });
         }
     }
 }

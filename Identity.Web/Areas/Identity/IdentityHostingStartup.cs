@@ -23,7 +23,7 @@ namespace Identity.Web.Areas.Identity
                 var identityConfig = context.Configuration.GetSection("Identity");
 
                 services
-                    // SendGrid
+                    // Mail (SendGrid)
                     .Configure<MailOptions>(identityConfig.GetSection("SendGrid"))
                     .AddScoped(p => p.GetRequiredService<IOptionsSnapshot<MailOptions>>().Value)
                     .AddTransient<IEmailSender, IdentityEmailSender>();
@@ -34,10 +34,11 @@ namespace Identity.Web.Areas.Identity
                     {
                         options.UseSqlServer(
                             context.Configuration.GetConnectionString("IdentityContextConnection"),
-                            b =>
-                            b.MigrationsAssembly("Identity.Web")
+                            // since the DbContext is in another project, include the assemblyname for migrations
+                            b => b.MigrationsAssembly("Identity.Web")
                         );
                     })
+                    .AddTransient<IRefreshTokenStore, RefreshTokenStore>()
                     // Identity
                     .AddIdentity<ApplicationUser, IdentityRole>(o =>
                     {
@@ -52,10 +53,11 @@ namespace Identity.Web.Areas.Identity
                         o.Password.RequiredUniqueChars = 1;
                         o.Password.RequiredLength = 4;
                     })
-                    .AddDefaultUI()
                     .AddEntityFrameworkStores<IdentityContext>()
+                    .AddUserManager<ApplicationUserManager>()
+                    .AddClaimsPrincipalFactory<ApplicationUserClaimsFactory>()
                     .AddDefaultTokenProviders()
-                    .AddClaimsPrincipalFactory<ApplicationUserClaimsFactory>();
+                    .AddDefaultUI();
 
                 services
                     // requires HttpContextAccessor
