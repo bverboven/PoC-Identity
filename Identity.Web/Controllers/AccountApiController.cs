@@ -23,11 +23,13 @@ namespace Identity.Web.Controllers
 
         private readonly ApplicationUserManager _userManager;
         private readonly IUserClaimsPrincipalFactory<ApplicationUser> _claimsFactory;
+        private readonly ApplicationSignInManager _signInManager;
         private readonly JwtTokenHelper _tokenHelper;
-        public AccountApiController(ApplicationUserManager userManager, IUserClaimsPrincipalFactory<ApplicationUser> claimsFactory)
+        public AccountApiController(ApplicationUserManager userManager, IUserClaimsPrincipalFactory<ApplicationUser> claimsFactory, ApplicationSignInManager signInManager)
         {
             _userManager = userManager;
             _claimsFactory = claimsFactory;
+            _signInManager = signInManager;
             _tokenHelper = new JwtTokenHelper(new JwtTokenOptions { Key = "secret".PadRight(16, 'x') });
         }
 
@@ -37,7 +39,9 @@ namespace Identity.Web.Controllers
         public async Task<IActionResult> Login([FromBody]ApiLoginModel model)
         {
             var user = await _userManager.FindByNameAsync(model.Username);
-            if (user != null && await _userManager.CheckPasswordAsync(user, model.Password))
+
+            var loginResult = await _signInManager.CheckPasswordSignInAsync(user, model.Password, false);
+            if (user != null && loginResult.Succeeded)
             {
                 var tokenResult = await CreateToken(user);
                 return Ok(tokenResult);
@@ -45,6 +49,7 @@ namespace Identity.Web.Controllers
 
             return Unauthorized();
         }
+
         [AllowAnonymous]
         [HttpPost("refresh")]
         public async Task<IActionResult> Refresh([FromBody] ApiRefreshModel model)
@@ -69,21 +74,11 @@ namespace Identity.Web.Controllers
 
             var expires = DateTime.Now.AddMinutes(1);
             var token = _tokenHelper.Create(claims, expires);
-            //var tokenModel = new TokenModel(token);
 
             var refreshToken = await _userManager.CreateRefreshToken(user);
 
-            // update saved token in HttpContext
-            //var authenticationInfo = await HttpContext.AuthenticateAsync("Bearer");
-            //if (authenticationInfo.Properties != null)
-            //{
-            //    authenticationInfo.Properties.UpdateTokenValue("access_token", token);
-            //    authenticationInfo.Properties.UpdateTokenValue("expires_at", expires.ToString("o"));
-            //}
-
             return new
             {
-                //token = tokenModel,
                 accessToken = new
                 {
                     token,
@@ -96,6 +91,7 @@ namespace Identity.Web.Controllers
                 }
             };
         }
+
 
         // requires authorized token from scheme "Bearer"
         [HttpGet("claims")]
@@ -121,6 +117,7 @@ namespace Identity.Web.Controllers
             });
         }
 
+
         // requires authorized bearer token and policy "IsAdmin"
         [Authorize("IsAdmin")]
         [HttpGet("is-admin")]
@@ -128,6 +125,7 @@ namespace Identity.Web.Controllers
         {
             return Ok(new { isAdmin = true });
         }
+
         // requires authorized bearer token and policy "CanRead"
         [Authorize("CanRead")]
         [HttpGet("can-read")]
@@ -135,12 +133,13 @@ namespace Identity.Web.Controllers
         {
             return Ok(new { canRead = true });
         }
-        // requires authorized bearer token and policy "CanCreate"
-        [Authorize("CanCreate")]
-        [HttpGet("can-create")]
-        public IActionResult CanCreate()
+
+        // requires authorized bearer token and policy "CanDelete"
+        [Authorize("CanDelete")]
+        [HttpGet("can-delete")]
+        public IActionResult CanDelete()
         {
-            return Ok(new { canCreate = true });
+            return Ok(new { canDelete = true });
         }
     }
 }

@@ -22,7 +22,7 @@
     <p>
         <button type="button" id="checkAdminButton" class="btn btn-secondary">Is Administrator?</button>
         <button type="button" id="checkReadButton" class="btn btn-secondary">Can read?</button>
-        <button type="button" id="checkCreateButton" class="btn btn-secondary">Can create?</button>
+        <button type="button" id="checkDeleteButton" class="btn btn-secondary">Can delete?</button>
     </p>
 
     <div id="output" style="white-space: pre;"></div>
@@ -133,13 +133,13 @@
             const claimsFromTokenButton = document.getElementById('claimsFromTokenButton');
             const checkAdminButton = document.getElementById('checkAdminButton');
             const checkReadButton = document.getElementById('checkReadButton');
-            const checkCreateButton = document.getElementById('checkCreateButton');
+            const checkDeleteButton = document.getElementById('checkDeleteButton');
             const refreshTokenButton = document.getElementById('refreshTokenButton');
 
             claimsFromCookieButton.addEventListener('click', getDataFromCookieAuthentication);
             claimsFromTokenButton.style.display = 'none';
             checkAdminButton.style.display = 'none';
-            checkCreateButton.style.display = 'none';
+            checkDeleteButton.style.display = 'none';
             refreshTokenButton.style.display = 'none';
 
             loginButton.addEventListener('click', async () => {
@@ -148,7 +148,7 @@
                     console.debug('Logged in', { tokenMap });
                     claimsFromTokenButton.style.display = 'inline-block';
                     checkAdminButton.style.display = 'inline-block';
-                    checkCreateButton.style.display = 'inline-block';
+                    checkDeleteButton.style.display = 'inline-block';
                     refreshTokenButton.style.display = 'inline-block';
                     loginForm.style.display = 'none';
                     setTimeout(refresh, tokenMap.get('expiresIn') - (10 * 1000));
@@ -157,7 +157,7 @@
             claimsFromTokenButton.addEventListener('click', getClaims);
             checkAdminButton.addEventListener('click', () => checkAuthorization('is-admin'));
             checkReadButton.addEventListener('click', () => checkAuthorization('can-read'));
-            checkCreateButton.addEventListener('click', () => checkAuthorization('can-create'));
+            checkDeleteButton.addEventListener('click', () => checkAuthorization('can-delete'));
             refreshTokenButton.addEventListener('click', refresh);
 
             loginForm.addEventListener('submit', e => e.preventDefault());

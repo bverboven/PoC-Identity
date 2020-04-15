@@ -21,6 +21,7 @@ Scaffold new Identity Item.
 
 Modifications:
 
+- _LoginPartial.cshtml
 - _ValidationScriptsPartial: remove /Identity/ in script src tags
 - Login, Register: add autocomplete attributes ([see Google suggests](https://developers.google.com/web/fundamentals/security/credential-management/save-forms))
 - EnableAuthenticator: display [QR Code](https://docs.microsoft.com/en-gb/aspnet/core/security/authentication/identity-enable-qrcodes?view=aspnetcore-3.1)
@@ -53,15 +54,20 @@ To enable migrations use MigrationsAssembly("Identity.Web") where the dbContext 
 
 Class library with core data, service, and helper classes. Must be in .Net Core 3.1!
 
-- DbContext
-- UserClaimsFactory
-- AccountMailHelper
-- JwtTokenHelper
+- DbContext *IdentityContext*
+- UserManager *ApplicationUserManager*
+- SignInManager *ApplicationSignInManager* (logs an entry for a login attempt)
+- UserClaimsFactory *ApplicationUserClaimsFactory*
+- *AccountMailHelper*
+- *JwtTokenHelper*
+- *LoginEntryStore*
+- *RefreshTokenStore*
 
 
 ## 4. Start Up
 
 ### 4.1 Startup.cs
+
 Services:
 
 - enable Mvc & RazorPages
@@ -79,18 +85,36 @@ Configure:
 
 
 ### 4.2 IdentityHostingStartup.cs
+
 Services:
 
 - add IEmailSender *IdentityEmailSender*
+- add *LoginEntryStore*
+- add *RefreshTokenStore*
+- add *AccountMailHelper*
 - add IdentityDbContext *IdentityContext<ApplicationUser>*
 - add Identity<ApplicationUser, IdentityRole>
 - add Default UI
 - add EntityFramework store
 - add DefaultTokenProviders
-- add ClaimsPrincipalFactory *ApplicationUserClaimsFactory* 
-- add helper *AccountMailHelper*
+- add *ApplicationUserManager*
+- add *ApplicationSignInManager*
+- add *ApplicationUserClaimsFactory* 
 - add Authentication (with external Login Providers)
 
 
-## 5. Javascript Client (Jwt)
-A JavaScript client (*/wwwroot/dist/index.html*) is used to check the Bearer token.
+## 5. Controllers
+
+### AccountController
+
+Uses the Cookies authentication scheme to deliver user information.
+
+
+### AccountApiController
+
+Uses the Bearer authentication scheme for logging in and to deliver user information.
+This controller also enables [refreshing the access token](https://medium.com/@kedren.villena/refresh-jwt-token-with-asp-net-core-c-25c2c9ee984b) by using a refresh token.
+
+
+## 6. Javascript Client (Jwt)
+A JavaScript client (*/wwwroot/dist/index.html*) is used to test the Bearer token and *AccountApiController*.

@@ -22,14 +22,8 @@ namespace Identity.Web.Areas.Identity
             {
                 var identityConfig = context.Configuration.GetSection("Identity");
 
+                // DbContext
                 services
-                    // Mail (SendGrid)
-                    .Configure<MailOptions>(identityConfig.GetSection("SendGrid"))
-                    .AddScoped(p => p.GetRequiredService<IOptionsSnapshot<MailOptions>>().Value)
-                    .AddTransient<IEmailSender, IdentityEmailSender>();
-
-                services
-                    // DbContext
                     .AddDbContext<IdentityContext>(options =>
                     {
                         options.UseSqlServer(
@@ -37,9 +31,10 @@ namespace Identity.Web.Areas.Identity
                             // since the DbContext is in another project, include the assemblyname for migrations
                             b => b.MigrationsAssembly("Identity.Web")
                         );
-                    })
-                    .AddTransient<IRefreshTokenStore, RefreshTokenStore>()
-                    // Identity
+                    });
+
+                // Identity
+                services
                     .AddIdentity<ApplicationUser, IdentityRole>(o =>
                     {
                         o.SignIn.RequireConfirmedAccount = true;
@@ -54,12 +49,24 @@ namespace Identity.Web.Areas.Identity
                         o.Password.RequiredLength = 4;
                     })
                     .AddEntityFrameworkStores<IdentityContext>()
-                    .AddUserManager<ApplicationUserManager>()
-                    .AddClaimsPrincipalFactory<ApplicationUserClaimsFactory>()
+                    // call this early on to prevent it overwriting other services
+                    .AddDefaultUI()
                     .AddDefaultTokenProviders()
-                    .AddDefaultUI();
+                    // custom implementations
+                    .AddUserManager<ApplicationUserManager>()
+                    .AddSignInManager<ApplicationSignInManager>()
+                    .AddClaimsPrincipalFactory<ApplicationUserClaimsFactory>();
 
+                // mail (SendGrid)
                 services
+                    .Configure<MailOptions>(identityConfig.GetSection("SendGrid"))
+                    .AddScoped(p => p.GetRequiredService<IOptionsSnapshot<MailOptions>>().Value)
+                    .AddTransient<IEmailSender, IdentityEmailSender>();
+
+                // custom services
+                services
+                    .AddTransient<IRefreshTokenStore, RefreshTokenStore>()
+                    .AddTransient<ILoginEntryStore, LoginEntryStore>()
                     // requires HttpContextAccessor
                     .AddTransient<AccountMailHelper<ApplicationUser>>();
 

@@ -7,7 +7,10 @@ namespace Identity.Library.Entities
     {
         [Key]
         public string Token { get; set; }
+        [Required, MaxLength(450)]
         public string UserId { get; set; }
-        public DateTime Expires { get; set; }
+        public DateTime? Expires { get; set; }
+
+        public ApplicationUser User { get; set; }
     }
 }

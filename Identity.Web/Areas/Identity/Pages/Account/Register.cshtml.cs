@@ -10,20 +10,21 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 using Identity.Library.Helpers;
+using Identity.Library.Services;
 
 namespace Identity.Web.Areas.Identity.Pages.Account
 {
     [AllowAnonymous]
     public class RegisterModel : PageModel
     {
-        private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly ApplicationSignInManager _signInManager;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ILogger<RegisterModel> _logger;
         private readonly AccountMailHelper<ApplicationUser> _accountMailHelper;
 
         public RegisterModel(
             UserManager<ApplicationUser> userManager,
-            SignInManager<ApplicationUser> signInManager,
+            ApplicationSignInManager signInManager,
             ILogger<RegisterModel> logger,
             AccountMailHelper<ApplicationUser> accountMailHelper)
         {

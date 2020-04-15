@@ -79,9 +79,9 @@ namespace Identity.Web
                     {
                         c.RequireClaim("permission", "can_read");
                     });
-                    o.AddPolicy("CanCreate", c =>
+                    o.AddPolicy("CanDelete", c =>
                     {
-                        c.RequireClaim("permission", "can_create");
+                        c.RequireClaim("permission", "can_delete");
                     });
                     o.AddPolicy("HasName", c =>
                     {

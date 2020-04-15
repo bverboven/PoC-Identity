@@ -1,0 +1,43 @@
+﻿@using Identity.Library.Entities;
+@using Microsoft.AspNetCore.Authorization
+@inject IAuthorizationService AuthorizationService
+@model IList<LoginEntry>
+
+@{
+    ViewData["Title"] = "LoginEntries";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var canDeleteLoginEntries = await AuthorizationService.AuthorizeAsync(User, "CanDelete");
+}
+
+<h1>LoginEntries</h1>
+
+<form method="post">
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>IP</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th>Remove</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var entry in Model)
+            {
+                <tr>
+                    <td>@entry.IPAddress</td>
+                    <td>@entry.Status</td>
+                    <td>@entry.Created.ToShortDateString() @entry.Created.ToShortTimeString()</td>
+                    <td>
+                        <button type="submit" name="remove" class="btn btn-danger"
+                                asp-action="DeleteLoginEntry" asp-route-id="@entry.Id"
+                                disabled="@canDeleteLoginEntries.Failure">
+                            Remove
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</form>

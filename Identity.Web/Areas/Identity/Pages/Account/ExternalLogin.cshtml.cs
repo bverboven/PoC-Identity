@@ -8,19 +8,20 @@ using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Identity.Library.Helpers;
+using Identity.Library.Services;
 
 namespace Identity.Web.Areas.Identity.Pages.Account
 {
     [AllowAnonymous]
     public class ExternalLoginModel : PageModel
     {
-        private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly ApplicationSignInManager _signInManager;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ILogger<ExternalLoginModel> _logger;
         private readonly AccountMailHelper<ApplicationUser> _accountMailHelper;
 
         public ExternalLoginModel(
-            SignInManager<ApplicationUser> signInManager,
+            ApplicationSignInManager signInManager,
             UserManager<ApplicationUser> userManager,
             ILogger<ExternalLoginModel> logger,
             AccountMailHelper<ApplicationUser> accountMailHelper)
