@@ -26,20 +26,48 @@ namespace Identity.Library.Services
         // RefreshToken
         public Task<RefreshToken> CreateRefreshToken(ApplicationUser user, int expiresInHours = 24)
         {
+            if (user == null)
+            {
+                throw new ArgumentNullException(nameof(user));
+            }
+
             return _refreshTokenStore.Create(user.Id, expiresInHours);
         }
         public Task<bool> VerifyRefreshToken(ApplicationUser user, string token)
         {
+            if (user == null)
+            {
+                throw new ArgumentNullException(nameof(user));
+            }
+
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                throw new ArgumentNullException(nameof(token));
+            }
+
             return _refreshTokenStore.VerifyAndDelete(token, user.Id);
         }
 
         // LoginEntry
         public async Task<IEnumerable<LoginEntry>> GetLoginEntries(ApplicationUser user)
         {
+            if (user == null)
+            {
+                throw new ArgumentNullException(nameof(user));
+            }
             return await _loginEntryStore.List(user.Id);
         }
         public async Task RemoveLoginEntry(ApplicationUser user, LoginEntry item)
         {
+            if (user == null)
+            {
+                throw new ArgumentNullException(nameof(user));
+            }
+            if (item == null)
+            {
+                throw new ArgumentNullException(nameof(item));
+            }
+
             item.UserId = user.Id;
             await _loginEntryStore.Delete(item);
         }

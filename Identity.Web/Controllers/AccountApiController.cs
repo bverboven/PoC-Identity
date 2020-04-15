@@ -39,9 +39,13 @@ namespace Identity.Web.Controllers
         public async Task<IActionResult> Login([FromBody]ApiLoginModel model)
         {
             var user = await _userManager.FindByNameAsync(model.Username);
+            if (user == null)
+            {
+                return Unauthorized();
+            }
 
             var loginResult = await _signInManager.CheckPasswordSignInAsync(user, model.Password, false);
-            if (user != null && loginResult.Succeeded)
+            if (loginResult.Succeeded)
             {
                 var tokenResult = await CreateToken(user);
                 return Ok(tokenResult);
@@ -67,8 +71,7 @@ namespace Identity.Web.Controllers
         private async Task<object> CreateToken(ApplicationUser user)
         {
             var principal = await _claimsFactory.CreateAsync(user);
-            var claims = (await _userManager.GetClaimsAsync(user))
-                .Concat(principal.Claims)
+            var claims = principal.Claims
                 .Where(c => WANTED_CLAIMS.Contains(c.Type))
                 .ToList();
 

@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30002.166
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Identity.Web", "Identity.Web\Identity.Web.csproj", "{9CE4DFF4-2445-4D3D-9D9D-0876BAC4082B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Identity.Web", "Identity.Web\Identity.Web.csproj", "{9CE4DFF4-2445-4D3D-9D9D-0876BAC4082B}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{914F987A-8369-4A01-9C6E-E2524AF1B5DB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Identity.Library", "Identity.Library\Identity.Library.csproj", "{594C9F40-E826-41C0-9BD2-806897BD6133}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Identity.Library", "Identity.Library\Identity.Library.csproj", "{594C9F40-E826-41C0-9BD2-806897BD6133}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{8EB0C54E-2B7E-4A6C-BF51-6C3B8F7BBB1D}"
 EndProject

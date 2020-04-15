@@ -118,3 +118,4 @@ This controller also enables [refreshing the access token](https://medium.com/@k
 
 ## 6. Javascript Client (Jwt)
 A JavaScript client (*/wwwroot/dist/index.html*) is used to test the Bearer token and *AccountApiController*.
+A **Refresh Token** to avoid invalidating the Access Token is also implemented.

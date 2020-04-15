@@ -1,5 +1,4 @@
 ﻿using Identity.Library.Entities;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System;
@@ -11,11 +10,10 @@ namespace Identity.Web.Areas.Identity.Pages.Account.Manage
 {
     public partial class IndexModel : PageModel
     {
-        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly ApplicationUserManager _userManager;
         private readonly ApplicationSignInManager _signInManager;
-
         public IndexModel(
-            UserManager<ApplicationUser> userManager,
+            ApplicationUserManager userManager,
             ApplicationSignInManager signInManager)
         {
             _userManager = userManager;

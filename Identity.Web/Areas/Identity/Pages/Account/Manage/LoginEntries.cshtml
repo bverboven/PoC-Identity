@@ -1,0 +1,19 @@
+﻿@page
+@model Identity.Web.Areas.Identity.Pages.Account.Manage.LoginEntriesModel
+@{
+    ViewData["Title"] = "Login entries";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<section>
+    <form id="entriesLogin" method="post">
+        <h4>Enable/disable the right to see login entries.</h4>
+        <hr />
+        <div class="form-check">
+            <input asp-for="Input.CanRead" class="form-check-input" />
+            <label asp-for="Input.CanRead" class="form-check-label"></label>
+        </div>
+        <button id="update-loginEntries-button" type="submit" class="btn btn-primary mt-2">Save</button>
+    </form>
+</section>
