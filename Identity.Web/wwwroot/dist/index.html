@@ -136,30 +136,33 @@
             const checkDeleteButton = document.getElementById('checkDeleteButton');
             const refreshTokenButton = document.getElementById('refreshTokenButton');
 
-            claimsFromCookieButton.addEventListener('click', getDataFromCookieAuthentication);
+            // hide buttons
             claimsFromTokenButton.style.display = 'none';
             checkAdminButton.style.display = 'none';
+            checkReadButton.style.display = 'none';
             checkDeleteButton.style.display = 'none';
             refreshTokenButton.style.display = 'none';
 
+            // event listeneres
             loginButton.addEventListener('click', async () => {
                 await login(loginForm.email.value, loginForm.password.value);
                 if (tokenMap.get('accessToken')) {
                     console.debug('Logged in', { tokenMap });
                     claimsFromTokenButton.style.display = 'inline-block';
                     checkAdminButton.style.display = 'inline-block';
+                    checkReadButton.style.display = 'inline-block';
                     checkDeleteButton.style.display = 'inline-block';
                     refreshTokenButton.style.display = 'inline-block';
                     loginForm.style.display = 'none';
                     setTimeout(refresh, tokenMap.get('expiresIn') - (10 * 1000));
                 }
             });
+            claimsFromCookieButton.addEventListener('click', getDataFromCookieAuthentication);
             claimsFromTokenButton.addEventListener('click', getClaims);
             checkAdminButton.addEventListener('click', () => checkAuthorization('is-admin'));
             checkReadButton.addEventListener('click', () => checkAuthorization('can-read'));
             checkDeleteButton.addEventListener('click', () => checkAuthorization('can-delete'));
             refreshTokenButton.addEventListener('click', refresh);
-
             loginForm.addEventListener('submit', e => e.preventDefault());
         };
     </script>

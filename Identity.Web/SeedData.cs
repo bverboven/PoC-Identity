@@ -16,7 +16,11 @@ namespace Identity.Web
         {
             var services = new ServiceCollection();
             services.AddLogging(o => o.AddConsole());
-            services.AddDbContext<IdentityContext>(options => options.UseSqlServer(connectionString));
+            services.AddDbContext<IdentityContext>(options =>
+            {
+                //options.UseSqlServer(connectionString);
+                options.UseMySql(connectionString);
+            });
 
             services
                 .AddIdentity<ApplicationUser, IdentityRole>(o =>

@@ -26,8 +26,13 @@ namespace Identity.Web.Areas.Identity
                 services
                     .AddDbContext<IdentityContext>(options =>
                     {
-                        options.UseSqlServer(
-                            context.Configuration.GetConnectionString("IdentityContextConnection"),
+                        //options.UseSqlServer(
+                        //    context.Configuration.GetConnectionString("IdentityContextSQL"),
+                        //    // since the DbContext is in another project, include the assemblyname for migrations
+                        //    b => b.MigrationsAssembly("Identity.Web")
+                        //);
+                        options.UseMySql(
+                            context.Configuration.GetConnectionString("IdentityContextMySQL"),
                             // since the DbContext is in another project, include the assemblyname for migrations
                             b => b.MigrationsAssembly("Identity.Web")
                         );

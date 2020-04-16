@@ -47,7 +47,10 @@ namespace Identity.Web.Controllers
             var loginResult = await _signInManager.CheckPasswordSignInAsync(user, model.Password, false);
             if (loginResult.Succeeded)
             {
-                var tokenResult = await CreateToken(user);
+                var tokenResult = await CreateTokenAndSignIn(user);
+                // also sign in default scheme
+                await SignInDefaultScheme(user);
+
                 return Ok(tokenResult);
             }
 
@@ -62,13 +65,13 @@ namespace Identity.Web.Controllers
             var user = await _userManager.FindByIdAsync(userId);
             if (user != null && await _userManager.VerifyRefreshToken(user, model.RefreshToken))
             {
-                var tokenResult = await CreateToken(user);
+                var tokenResult = await CreateTokenAndSignIn(user);
                 return Ok(tokenResult);
             }
 
             return Unauthorized();
         }
-        private async Task<object> CreateToken(ApplicationUser user)
+        private async Task<object> CreateTokenAndSignIn(ApplicationUser user)
         {
             var principal = await _claimsFactory.CreateAsync(user);
             var claims = principal.Claims
@@ -93,6 +96,12 @@ namespace Identity.Web.Controllers
                     refreshToken.Expires
                 }
             };
+        }
+
+        private async Task SignInDefaultScheme(ApplicationUser user)
+        {
+            var extraClaims = new[] { new Claim("amr", "pwd") };
+            await _signInManager.SignInWithClaimsAsync(user, new AuthenticationProperties(), extraClaims);
         }
 
 

@@ -9,6 +9,7 @@ using Microsoft.IdentityModel.Tokens;
 using System;
 using System.IO;
 using System.Text;
+using Microsoft.AspNetCore.Identity;
 
 namespace Identity.Web
 {
@@ -46,7 +47,8 @@ namespace Identity.Web
 
             // authentication
             services
-                .AddAuthentication()
+                // use the same scheme than Identity framework
+                .AddAuthentication(IdentityConstants.ApplicationScheme)
                 .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme)
                 // more info: https://docs.microsoft.com/en-us/aspnet/core/security/authorization/limitingidentitybyscheme?view=aspnetcore-3.1
                 .AddJwtBearer(o =>

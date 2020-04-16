@@ -25,12 +25,13 @@ namespace Identity.Web
 
             var host = CreateHostBuilder(args).Build();
             var logger = host.Services.GetRequiredService<ILogger<Program>>();
+            var config = host.Services.GetRequiredService<IConfiguration>();
+            //var connectionString = config.GetConnectionString("IdentityContextSQL");
+            var connectionString = config.GetConnectionString("IdentityContextMySQL");
 
             if (seed)
             {
                 logger.LogInformation("Seeding database...");
-                var config = host.Services.GetRequiredService<IConfiguration>();
-                var connectionString = config.GetConnectionString("IdentityContextConnection");
                 SeedData.EnsureSeedData(connectionString);
                 logger.LogInformation("Done seeding database.");
             }
@@ -38,8 +39,6 @@ namespace Identity.Web
             if (cleanup)
             {
                 logger.LogInformation("Cleaning up database...");
-                var config = host.Services.GetRequiredService<IConfiguration>();
-                var connectionString = config.GetConnectionString("IdentityContextConnection");
                 CleanData.CleanUp(connectionString);
                 logger.LogInformation("Done cleaning database.");
             }
