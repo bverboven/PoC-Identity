@@ -21,17 +21,29 @@ namespace Identity.Library.Services
         public override async Task<SignInResult> CheckPasswordSignInAsync(ApplicationUser user, string password, bool lockoutOnFailure)
         {
             var result = await base.CheckPasswordSignInAsync(user, password, lockoutOnFailure);
+            await LogEntry(user, result.ToString());
 
+            return result;
+        }
+        public override async Task<SignInResult> ExternalLoginSignInAsync(string loginProvider, string providerKey, bool isPersistent, bool bypassTwoFactor)
+        {
+            var result = await base.ExternalLoginSignInAsync(loginProvider, providerKey, isPersistent, bypassTwoFactor);
+            var user = await UserManager.FindByLoginAsync(loginProvider, providerKey);
+            await LogEntry(user, result.ToString());
+
+            return result;
+        }
+
+        private async Task LogEntry(ApplicationUser user, string status)
+        {
             // add entry for each login attempt
             var loginEntry = new LoginEntry
             {
                 UserId = user.Id,
                 IPAddress = Context.Connection.RemoteIpAddress,
-                Status = result.ToString()
+                Status = status
             };
             await _loginEntryStore.Save(loginEntry);
-
-            return result;
         }
     }
 }

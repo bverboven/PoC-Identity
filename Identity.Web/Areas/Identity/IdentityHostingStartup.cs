@@ -73,7 +73,8 @@ namespace Identity.Web.Areas.Identity
                     .AddTransient<IRefreshTokenStore, RefreshTokenStore>()
                     .AddTransient<ILoginEntryStore, LoginEntryStore>()
                     // requires HttpContextAccessor
-                    .AddTransient<AccountMailHelper<ApplicationUser>>();
+                    .AddTransient<AccountMailHelper<ApplicationUser>>()
+                    .AddTransient<ExternalAccountHelper<ApplicationUser>>();
 
                 // external logins
                 services

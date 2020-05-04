@@ -1,4 +1,6 @@
-﻿using Identity.Library.Data;
+﻿using System;
+using System.Linq;
+using Identity.Library.Data;
 using Identity.Library.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -26,11 +28,15 @@ namespace Identity.Web
 
             var loginEntries = context.LoginEntries;
             loginEntries.RemoveRange(loginEntries);
+            logger.LogInformation("Removed all login entries.");
 
-            var refreshTokens = context.RefreshTokens;
-            refreshTokens.RemoveRange(refreshTokens);
+            var refreshTokens = context.RefreshTokens
+                .Where(t => t.Expires <= DateTime.Now);
+            context.RefreshTokens.RemoveRange(refreshTokens);
+            logger.LogInformation("Cleaned up refresh tokens.");
 
             context.SaveChanges();
+            logger.LogInformation("Done cleaning up.");
         }
     }
 }

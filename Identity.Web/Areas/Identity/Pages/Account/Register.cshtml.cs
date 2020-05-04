@@ -50,7 +50,7 @@ namespace Identity.Web.Areas.Identity.Pages.Account
             public string Email { get; set; }
 
             [Required]
-            [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
+            [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 4)]
             [DataType(DataType.Password)]
             [Display(Name = "Password")]
             public string Password { get; set; }
@@ -60,8 +60,16 @@ namespace Identity.Web.Areas.Identity.Pages.Account
             [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
             public string ConfirmPassword { get; set; }
 
+            [MaxLength(256)]
+            [Display(Name = "Given name")]
             public string GivenName { get; set; }
+            [MaxLength(256)]
+            [Display(Name = "Family name")]
             public string FamilyName { get; set; }
+            [Phone]
+            [DataType(DataType.PhoneNumber)]
+            [Display(Name = "Phone number")]
+            public string PhoneNumber { get; set; }
         }
 
         public async Task OnGetAsync(string returnUrl = null)
@@ -80,6 +88,7 @@ namespace Identity.Web.Areas.Identity.Pages.Account
                 {
                     UserName = Input.Email,
                     Email = Input.Email,
+                    PhoneNumber = Input.PhoneNumber,
                     GivenName = Input.GivenName,
                     FamilyName = Input.FamilyName
                 };

@@ -2,6 +2,13 @@
 
 Proof of Concept for .Net Core Identity.
 The MVC controllers, Api controllers, Identity razor pages and JavaScript client are all combined in a single project.
+Features:
+- Identity
+- Cookies authentication
+- Jwt authentication for APIs (with custom refreshtoken implementation)
+- 2 factor authentication
+- External logins (registers a user automatically the first time)
+- Authorization: RoleClaims & UserClaims
 
 
 ## 1. Project
